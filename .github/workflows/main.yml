@@ -6,20 +6,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Install Dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+          sudo apt install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
           pip install --user --upgrade "setuptools<66.0.0" "buildozer>=1.5.0" "cython<3.0.0" wheel
 
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          # Agar pehle se spec file hai toh usay use karo, warna nayi banao
-          if [ ! -f buildozer.spec ]; then buildozer init; fi
-          
-          # Licenses confirm karne ka rasta
+          # Licenses ko zabardasti accept karwana
+          mkdir -p ~/.android && touch ~/.android/repositories.cfg
           yes | buildozer android debug --init || true
           
-          # Seedha build shuru karein bina purani safai ke
+          # Final Build
           buildozer -v android debug
