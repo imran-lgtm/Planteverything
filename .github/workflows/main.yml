@@ -15,12 +15,11 @@ jobs:
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          # Purani cache saaf karke fresh build shuru karte hain
-          buildozer android clean
+          # Agar pehle se spec file hai toh usay use karo, warna nayi banao
           if [ ! -f buildozer.spec ]; then buildozer init; fi
           
-          # Licenses confirm karein
+          # Licenses confirm karne ka rasta
           yes | buildozer android debug --init || true
           
-          # Buildozer ko batayein ke debug mode mein chale
+          # Seedha build shuru karein bina purani safai ke
           buildozer -v android debug
