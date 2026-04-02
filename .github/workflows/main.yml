@@ -9,12 +9,12 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev
           pip install --user --upgrade buildozer cython==0.29.33
 
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          buildozer init
-          # Hum purani spec file use karenge jo bahar pari hai
+          # Agar spec file nahi hai toh init karein, warna mojooda use karein
+          if [ ! -f buildozer.spec ]; then buildozer init; fi
           yes | buildozer -v android debug
