@@ -2,7 +2,7 @@ name: Build APK
 on: [push, workflow_dispatch]
 jobs:
   build:
-    runs-on: ubuntu-22.04  # Hum purana stable version use karenge
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
@@ -10,11 +10,19 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-          pip install --user --upgrade "buildozer>=1.5.0" "cython<3.0.0"
+          pip install --user --upgrade "buildozer>=1.5.0" "cython<3.0.0" setuptools
 
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          # Agar spec file nahi hai toh init karein
-          if [ ! -f buildozer.spec ]; then buildozer init; fi
+          # Licenses ko auto-accept karne ka jadui formula
+          mkdir -p ~/.android
+          touch ~/.android/repositories.cfg
+          
+          # Buildozer run karne se pehle licenses accept karwana
+          buildozer android debug --init
+          
+          # Force accept all licenses
+          yes | /home/runner/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager --sdk_root=/home/runner/.buildozer/android/platform/android-sdk --licenses || true
+          
           buildozer -v android debug
