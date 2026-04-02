@@ -13,16 +13,31 @@ class ScannerScreen(Screen):
     def __init__(self, **kw):
         super().__init__(**kw)
         layout = BoxLayout(orientation='vertical', padding=15, spacing=10)
-        layout.add_widget(Label(text="🌿 PLANT ENCYCLOPEDIA AI 🌿", size_hint_y=0.1, font_size='22sp', bold=True, color=(0.4, 1, 0.4, 1)))
         
-        # Camera preview
+        # Header
+        layout.add_widget(Label(
+            text="🌿 PLANT ENCYCLOPEDIA AI 🌿", 
+            size_hint_y=0.1, 
+            font_size='22sp', 
+            bold=True, 
+            color=(0.4, 1, 0.4, 1)
+        ))
+        
+        # Camera Preview
         self.cam = Camera(play=True, resolution=(640, 480), size_hint_y=0.6)
         layout.add_widget(self.cam)
         
+        # Info Label
         self.info = Label(text="Scan plant for History & Diseases", size_hint_y=0.1)
         layout.add_widget(self.info)
         
-        btn = Button(text="📷 SCAN NOW", size_hint_y=0.15, background_color=(0.1, 0.7, 0.1, 1), bold=True)
+        # Scan Button
+        btn = Button(
+            text="📷 SCAN NOW", 
+            size_hint_y=0.15, 
+            background_color=(0.1, 0.7, 0.1, 1), 
+            bold=True
+        )
         layout.add_widget(btn)
         self.add_widget(layout)
 
@@ -30,7 +45,11 @@ class CommunityScreen(Screen):
     def __init__(self, **kw):
         super().__init__(**kw)
         layout = BoxLayout(orientation='vertical', padding=20)
-        layout.add_widget(Label(text="👥 GLOBAL COMMUNITY\n(Connecting soon...)", halign='center', font_size='20sp'))
+        layout.add_widget(Label(
+            text="👥 GLOBAL COMMUNITY\n(Connecting soon...)", 
+            halign='center', 
+            font_size='20sp'
+        ))
         self.add_widget(layout)
 
 class PlantEncyclopediaApp(App):
@@ -40,19 +59,23 @@ class PlantEncyclopediaApp(App):
         self.sm.add_widget(CommunityScreen(name='community'))
         
         root = BoxLayout(orientation='vertical')
+        
+        # Screen Display Area
         root.add_widget(self.sm)
         
-        # Navigation
+        # Navigation Bar
         nav = BoxLayout(orientation='horizontal', size_hint_y=0.1, spacing=5)
         btn1 = Button(text="Scan AI", background_color=(0.2, 0.5, 0.2, 1))
         btn1.bind(on_press=lambda x: setattr(self.sm, 'current', 'scanner'))
+        
         btn2 = Button(text="Community", background_color=(0.2, 0.5, 0.2, 1))
         btn2.bind(on_press=lambda x: setattr(self.sm, 'current', 'community'))
+        
         nav.add_widget(btn1)
         nav.add_widget(btn2)
         root.add_widget(nav)
         
-        # --- DEVELOPER NAME (IMRAN DJZ) ---
+        # --- DEVELOPER NAME SIGNATURE ---
         root.add_widget(Label(
             text="Developed by: Imran(djz)", 
             size_hint_y=0.05, 
