@@ -1,20 +1,32 @@
-[app]
-title = Planteverything
-package.name = planteverything
-package.domain = org.test
-source.dir = .
-source.include_exts = py,png,jpg,kv,atlas
-version = 0.1
-requirements = python3,kivy==2.1.0
+name: Build APK
+on: 
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
 
-orientation = portrait
-osx.python_version = 3
-osx.kivy_version = 1.9.1
-fullscreen = 0
-android.archs = arm64-v8a
-android.allow_backup = True
-android.accept_sdk_license = True
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-[buildozer]
-log_level = 2
-warn_on_root = 1
+      - name: Install Buildozer and Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+          pip install buildozer cython==0.29.33
+
+      - name: Build with Buildozer
+        run: |
+          yes | buildozer -v android debug
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Planteverything-APK
+          path: bin/*.apk
