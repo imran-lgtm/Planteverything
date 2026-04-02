@@ -10,14 +10,17 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-          # Error ko khatam karne ke liye setuptools ka version fix kar rahe hain
           pip install --user --upgrade "setuptools<66.0.0" "buildozer>=1.5.0" "cython<3.0.0" wheel
 
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          # Licenses auto-accept
+          # Purani cache saaf karke fresh build shuru karte hain
+          buildozer android clean
+          if [ ! -f buildozer.spec ]; then buildozer init; fi
+          
+          # Licenses confirm karein
           yes | buildozer android debug --init || true
           
-          # Build shuru karne se pehle zaroori checks
+          # Buildozer ko batayein ke debug mode mein chale
           buildozer -v android debug
