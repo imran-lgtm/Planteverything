@@ -23,11 +23,14 @@ requirements = python3, kivy==2.3.0, requests, urllib3, charset-normalizer, idna
 # Permissions
 android.permissions = INTERNET, CAMERA, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
 
-# Android API Settings (Ab sirf EK baar hain)
+# Android API Settings (Bilkul Sahi Version)
 android.api = 33
 android.minapi = 21
 android.sdk = 33
 android.ndk = 25b
+
+# --- YE LINE ZAROORI HAI (IS SE 5% WALA ERROR KHATAM HOGA) ---
+android.accept_sdk_license = True
 
 # Architecture
 android.archs = arm64-v8a, armeabi-v7a
