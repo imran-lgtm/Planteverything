@@ -16,7 +16,14 @@ source.include_exts = py,png,jpg,kv,atlas
 
 # (str) Application version
 version = 0.1
+# (list) Android additionnal libraries to copy into libs/armeabi
+#android.add_libs_armeabi = libs/android-v7/libgnustl_shared.so
 
+# (str) XML attribute to add to the application element in the manifest
+android.manifest.attributes = android:usesCleartextTraffic="true"
+
+# (list) Android application meta-data to set (name=value format)
+#android.meta_data =
 # (list) Application requirements (ZAROORI LINE)
 requirements = python3, kivy, requests, urllib3, charset-normalizer, idna, certifi
 
