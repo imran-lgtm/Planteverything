@@ -1,6 +1,5 @@
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.screenmanager import ScreenManager, Screen
@@ -9,76 +8,104 @@ from kivy.graphics.context_instructions import PushMatrix, PopMatrix, Rotate
 from kivy.utils import platform
 from kivy.core.window import Window
 from kivy.clock import Clock
+import requests
+import base64
 
-# Force Fullscreen Size
-WIDTH = Window.width
-HEIGHT = Window.height
+# Pixel 6 UI Settings
+Window.clearcolor = (0.02, 0.08, 0.02, 1)
+
+def start_permissions():
+    if platform == 'android':
+        from android.permissions import request_permissions, Permission
+        request_permissions([Permission.CAMERA, Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE, Permission.INTERNET])
 
 class ScannerScreen(Screen):
     def __init__(self, **kw):
         super().__init__(**kw)
-        self.main_layout = FloatLayout(size=(WIDTH, HEIGHT))
+        self.layout = BoxLayout(orientation='vertical')
 
-        # --- FORCE FULLSCREEN CAMERA ---
-        # Hum size_hint ko None kar ke manual width/height de rahe hain
-        self.cam = Camera(
-            play=True, 
-            resolution=(1280, 720), 
-            size_hint=(None, None),
-            size=(WIDTH, HEIGHT),
-            pos=(0, 0),
-            allow_stretch=True, 
-            keep_ratio=False
-        )
+        # 1. BARA CAMERA (75% Screen)
+        self.cam_container = BoxLayout(size_hint=(1, 0.75))
+        self.cam = Camera(play=True, resolution=(1280, 720), allow_stretch=True, keep_ratio=False)
         
-        # Rotation Fix
+        # Rotation Fix for Pixel 6
         with self.cam.canvas.before:
             PushMatrix()
-            self.rot = Rotate(angle=-90, origin=(WIDTH/2, HEIGHT/2))
+            self.rot = Rotate(angle=-90, origin=self.cam.center)
         with self.cam.canvas.after:
             PopMatrix()
+        self.cam.bind(pos=self.update_rotate_origin, size=self.update_rotate_origin)
         
-        self.main_layout.add_widget(self.cam)
+        self.cam_container.add_widget(self.cam)
+        self.layout.add_widget(self.cam_container)
 
-        # UI Overlay (Buttons etc)
-        overlay = BoxLayout(orientation='vertical', padding=20, spacing=10)
-        overlay.add_widget(Label(text="🌿 PLANT ENCYCLOPEDIA", size_hint_y=0.1, bold=True, font_size='22sp'))
-        overlay.add_widget(Label(text="", size_hint_y=0.6)) # Center Space
+        # 2. UI CONTROL PANEL (25% Screen)
+        self.ui_panel = BoxLayout(orientation='vertical', size_hint=(1, 0.25), padding=10, spacing=8)
         
         self.info_label = Label(
-            text="Tap below to Identify Plant", 
-            size_hint_y=0.1, 
-            background_color=(0,0,0,0.6)
+            text="🌿 Plant Encyclopedia\nReady to Identify Species", 
+            font_size='15sp', 
+            halign='center',
+            color=(0.7, 1, 0.7, 1)
         )
-        overlay.add_widget(self.info_label)
+        self.ui_panel.add_widget(self.info_label)
         
         self.scan_btn = Button(
-            text="📷 SCAN NOW", 
-            size_hint_y=0.15, 
-            background_color=(0.1, 0.7, 0.1, 0.9), 
-            bold=True
+            text="📷 CAPTURE & IDENTIFY (AI)", 
+            background_color=(0.2, 0.6, 0.2, 1), 
+            bold=True,
+            font_size='18sp'
         )
-        self.scan_btn.bind(on_press=self.start_scan)
-        overlay.add_widget(self.scan_btn)
+        self.scan_btn.bind(on_press=self.start_identification)
+        self.ui_panel.add_widget(self.scan_btn)
 
-        self.main_layout.add_widget(overlay)
-        self.add_widget(self.main_layout)
+        self.layout.add_widget(self.ui_panel)
+        self.add_widget(self.layout)
 
-    def start_scan(self, instance):
-        self.info_label.text = "🔍 AI is Analyzing... Please Wait"
-        # 3 second baad result dikhayega
-        Clock.schedule_once(self.show_result, 3)
+    def update_rotate_origin(self, instance, value):
+        self.rot.origin = self.cam.center
 
-    def show_result(self, dt):
-        self.info_label.text = "✅ SUCCESS: Ready for Real AI API!"
-        self.info_label.color = (0, 1, 0, 1)
+    def start_identification(self, instance):
+        self.info_label.text = "🔍 Capturing... Sending to AI Cloud..."
+        # Camera se photo save karna
+        try:
+            self.cam.export_to_png("scan.png")
+            Clock.schedule_once(self.send_to_ai, 1)
+        except:
+            self.info_label.text = "❌ Camera Error! Try again."
+
+    def send_to_ai(self, dt):
+        # AI Identification Logic (Plant.id Demo)
+        api_url = "https://api.plant.id/v2/identify"
+        # Demo API Key (Testing ke liye)
+        api_key = "qWvI... (Aapki Key Yahan Ayegi)" 
+
+        try:
+            with open("scan.png", "rb") as img_file:
+                b64_image = base64.b64encode(img_file.read()).decode("ascii")
+
+            # Fake response agar API Key nahi hai (Testing ke liye logic)
+            if "qWvI" in api_key: 
+                self.info_label.text = "✅ SUCCESS!\nPlant: Money Plant (Epipremnum aureum)\nHistory: Native to Moorea.\nCare: Bright indirect light."
+                self.info_label.color = (0.3, 1, 0.3, 1)
+            else:
+                # Asli API Call
+                headers = {"Content-Type": "application/json", "Api-Key": api_key}
+                payload = {"images": [b64_image], "modifiers": ["crops_fast"]}
+                response = requests.post(api_url, json=payload, headers=headers)
+                data = response.json()
+                name = data['suggestions'][0]['plant_name']
+                self.info_label.text = f"✅ FOUND: {name}\nDeveloped by: Imran(djz)"
+        
+        except Exception as e:
+            self.info_label.text = "⚠️ Connection Error!\nCheck Internet and try again."
 
 class PlantEncyclopediaApp(App):
     def build(self):
-        self.sm = ScreenManager()
-        self.sm.add_widget(ScannerScreen(name='scanner'))
-        # Abhi sirf scanner check karte hain
-        return self.sm
+        start_permissions()
+        sm = ScreenManager()
+        sm.add_widget(ScannerScreen(name='scanner'))
+        return sm
 
 if __name__ == '__main__':
     PlantEncyclopediaApp().run()
