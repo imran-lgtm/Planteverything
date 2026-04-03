@@ -20,7 +20,8 @@ jobs:
         run: buildozer android debug
       
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: apk-file
           path: bin/*.apk
+          retention-days: 5
