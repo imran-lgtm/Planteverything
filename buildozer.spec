@@ -25,7 +25,9 @@ icon.filename = %(source.dir)s/assets/icon.png
 
 # Permissions
 android.permissions = INTERNET,CAMERA,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
-
+android.sdk = 0  # Auto detect
+android.api = 33
+android.minapi = 21
 # API level
 android.api = 33
 android.minapi = 21
