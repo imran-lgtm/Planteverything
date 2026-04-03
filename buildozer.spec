@@ -26,7 +26,7 @@ orientation = portrait
 
 # (list) Permissions
 android.permissions = CAMERA, INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
-
+requirements = python3, kivy, requests, urllib3, charset-normalizer, idna, certifi
 # (list) The Android archs to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
 android.archs = armeabi-v7a, arm64-v8a
 
