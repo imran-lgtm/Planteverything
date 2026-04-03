@@ -10,10 +10,9 @@ from kivy.core.window import Window
 from kivy.clock import Clock
 import requests
 import base64
+import os
 
-# Pixel 6 UI Settings
-Window.clearcolor = (0.02, 0.08, 0.02, 1)
-
+# Permissions for Android
 def start_permissions():
     if platform == 'android':
         from android.permissions import request_permissions, Permission
@@ -24,11 +23,10 @@ class ScannerScreen(Screen):
         super().__init__(**kw)
         self.layout = BoxLayout(orientation='vertical')
 
-        # 1. BARA CAMERA (75% Screen)
+        # Camera Section (75%)
         self.cam_container = BoxLayout(size_hint=(1, 0.75))
         self.cam = Camera(play=True, resolution=(1280, 720), allow_stretch=True, keep_ratio=False)
         
-        # Rotation Fix for Pixel 6
         with self.cam.canvas.before:
             PushMatrix()
             self.rot = Rotate(angle=-90, origin=self.cam.center)
@@ -39,24 +37,13 @@ class ScannerScreen(Screen):
         self.cam_container.add_widget(self.cam)
         self.layout.add_widget(self.cam_container)
 
-        # 2. UI CONTROL PANEL (25% Screen)
-        self.ui_panel = BoxLayout(orientation='vertical', size_hint=(1, 0.25), padding=10, spacing=8)
-        
-        self.info_label = Label(
-            text="🌿 Plant Encyclopedia\nReady to Identify Species", 
-            font_size='15sp', 
-            halign='center',
-            color=(0.7, 1, 0.7, 1)
-        )
+        # UI Section (25%)
+        self.ui_panel = BoxLayout(orientation='vertical', size_hint=(1, 0.25), padding=10, spacing=5)
+        self.info_label = Label(text="🌿 Ready to Scan\n(Ensure Internet is ON)", font_size='14sp', halign='center')
         self.ui_panel.add_widget(self.info_label)
         
-        self.scan_btn = Button(
-            text="📷 CAPTURE & IDENTIFY (AI)", 
-            background_color=(0.2, 0.6, 0.2, 1), 
-            bold=True,
-            font_size='18sp'
-        )
-        self.scan_btn.bind(on_press=self.start_identification)
+        self.scan_btn = Button(text="📷 IDENTIFY PLANT (AI)", background_color=(0.1, 0.6, 0.1, 1), bold=True)
+        self.scan_btn.bind(on_press=self.capture_photo)
         self.ui_panel.add_widget(self.scan_btn)
 
         self.layout.add_widget(self.ui_panel)
@@ -65,40 +52,46 @@ class ScannerScreen(Screen):
     def update_rotate_origin(self, instance, value):
         self.rot.origin = self.cam.center
 
-    def start_identification(self, instance):
-        self.info_label.text = "🔍 Capturing... Sending to AI Cloud..."
-        # Camera se photo save karna
+    def capture_photo(self, instance):
+        self.info_label.text = "🔍 Capturing Photo..."
+        # Photo path
+        self.photo_path = os.path.join(App.get_running_app().user_data_dir, "plant_scan.png")
+        self.cam.export_to_png(self.photo_path)
+        Clock.schedule_once(self.identify_via_ai, 1)
+
+    def identify_via_ai(self, dt):
+        self.info_label.text = "📡 Sending to AI Server..."
+        
+        # --- API SETTINGS ---
+        API_KEY = "2GvI... (Demo Key)" # Yahan asli key chahiye
+        URL = "https://api.plant.id/v2/identify"
+
         try:
-            self.cam.export_to_png("scan.png")
-            Clock.schedule_once(self.send_to_ai, 1)
-        except:
-            self.info_label.text = "❌ Camera Error! Try again."
+            with open(self.photo_path, "rb") as file:
+                image_64 = base64.b64encode(file.read()).decode("ascii")
 
-    def send_to_ai(self, dt):
-        # AI Identification Logic (Plant.id Demo)
-        api_url = "https://api.plant.id/v2/identify"
-        # Demo API Key (Testing ke liye)
-        api_key = "qWvI... (Aapki Key Yahan Ayegi)" 
+            payload = {
+                "images": [image_64],
+                "modifiers": ["crops_fast", "similar_images"],
+                "plant_details": ["common_names", "taxonomy"]
+            }
+            headers = {"Content-Type": "application/json", "Api-Key": API_KEY}
 
-        try:
-            with open("scan.png", "rb") as img_file:
-                b64_image = base64.b64encode(img_file.read()).decode("ascii")
-
-            # Fake response agar API Key nahi hai (Testing ke liye logic)
-            if "qWvI" in api_key: 
-                self.info_label.text = "✅ SUCCESS!\nPlant: Money Plant (Epipremnum aureum)\nHistory: Native to Moorea.\nCare: Bright indirect light."
+            # Timeout set kiya hai taake app hang na ho
+            response = requests.post(URL, json=payload, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                plant_name = data['suggestions'][0]['plant_name']
+                confidence = int(data['suggestions'][0]['probability'] * 100)
+                self.info_label.text = f"✅ FOUND: {plant_name}\nConfidence: {confidence}%\nDev: Imran(djz)"
                 self.info_label.color = (0.3, 1, 0.3, 1)
             else:
-                # Asli API Call
-                headers = {"Content-Type": "application/json", "Api-Key": api_key}
-                payload = {"images": [b64_image], "modifiers": ["crops_fast"]}
-                response = requests.post(api_url, json=payload, headers=headers)
-                data = response.json()
-                name = data['suggestions'][0]['plant_name']
-                self.info_label.text = f"✅ FOUND: {name}\nDeveloped by: Imran(djz)"
+                self.info_label.text = f"⚠️ Server Busy (Error {response.status_code})\nTry Again Later."
         
         except Exception as e:
-            self.info_label.text = "⚠️ Connection Error!\nCheck Internet and try again."
+            self.info_label.text = "❌ Connection Failed!\nCheck WiFi/Data or API Key."
+            print(f"Error: {e}")
 
 class PlantEncyclopediaApp(App):
     def build(self):
