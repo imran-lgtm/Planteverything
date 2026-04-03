@@ -6,29 +6,24 @@ title = Plant Doctor
 package.name = plantdoctor
 
 # Domain
-package.domain = org.yourname
+package.domain = org.imran.djz
 
 # Source code kahan hai
 source.dir = .
 
-# Main file
+# Main file extensions
 source.include_exts = py,png,jpg,kv,atlas,ttf,json
 
 # Version
 version = 1.0
 
 # Requirements (libraries)
-requirements = python3,kivy,kivymd,requests,pillow,urllib3,charset_normalizer,certifi,idna
-
-# Icon
-icon.filename = %(source.dir)s/assets/icon.png
+requirements = python3, kivy==2.3.0, requests, urllib3, charset-normalizer, idna, certifi, openssl, hostpython3
 
 # Permissions
-android.permissions = INTERNET,CAMERA,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
-android.sdk = 0  # Auto detect
-android.api = 33
-android.minapi = 21
-# API level
+android.permissions = INTERNET, CAMERA, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
+
+# Android API Settings (Ab sirf EK baar hain)
 android.api = 33
 android.minapi = 21
 android.sdk = 33
