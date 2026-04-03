@@ -42,3 +42,4 @@ log_level = 2
 
 # (int) Display warning if buildozer is run as root (0 = off, 1 = on)
 warn_on_root = 1
+requirements = python3, kivy, requests
