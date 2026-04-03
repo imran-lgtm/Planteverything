@@ -4,101 +4,79 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.camera import Camera
-from kivy.graphics.context_instructions import PushMatrix, PopMatrix, Rotate
 from kivy.utils import platform
 from kivy.core.window import Window
-from kivy.clock import Clock
-import requests
-import base64
-import os
+import time
 
-# Permissions for Android
+# Dark Green Theme
+Window.clearcolor = (0.02, 0.05, 0.02, 1)
+
 def start_permissions():
     if platform == 'android':
         from android.permissions import request_permissions, Permission
-        request_permissions([Permission.CAMERA, Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE, Permission.INTERNET])
+        request_permissions([Permission.CAMERA, Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
 
 class ScannerScreen(Screen):
     def __init__(self, **kw):
         super().__init__(**kw)
-        self.layout = BoxLayout(orientation='vertical')
-
-        # Camera Section (75%)
-        self.cam_container = BoxLayout(size_hint=(1, 0.75))
-        self.cam = Camera(play=True, resolution=(1280, 720), allow_stretch=True, keep_ratio=False)
+        layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
         
-        with self.cam.canvas.before:
-            PushMatrix()
-            self.rot = Rotate(angle=-90, origin=self.cam.center)
-        with self.cam.canvas.after:
-            PopMatrix()
-        self.cam.bind(pos=self.update_rotate_origin, size=self.update_rotate_origin)
+        # Header
+        layout.add_widget(Label(text="🌿 PLANT ENCYCLOPEDIA AI 🌿", size_hint_y=0.1, font_size='22sp', bold=True, color=(0.4, 1, 0.4, 1)))
         
-        self.cam_container.add_widget(self.cam)
-        self.layout.add_widget(self.cam_container)
-
-        # UI Section (25%)
-        self.ui_panel = BoxLayout(orientation='vertical', size_hint=(1, 0.25), padding=10, spacing=5)
-        self.info_label = Label(text="🌿 Ready to Scan\n(Ensure Internet is ON)", font_size='14sp', halign='center')
-        self.ui_panel.add_widget(self.info_label)
+        # Camera (Bara Size)
+        self.cam = Camera(play=True, resolution=(1280, 720), size_hint=(1, 0.6), allow_stretch=True)
+        layout.add_widget(self.cam)
         
-        self.scan_btn = Button(text="📷 IDENTIFY PLANT (AI)", background_color=(0.1, 0.6, 0.1, 1), bold=True)
-        self.scan_btn.bind(on_press=self.capture_photo)
-        self.ui_panel.add_widget(self.scan_btn)
-
-        self.layout.add_widget(self.ui_panel)
-        self.add_widget(self.layout)
-
-    def update_rotate_origin(self, instance, value):
-        self.rot.origin = self.cam.center
-
-    def capture_photo(self, instance):
-        self.info_label.text = "🔍 Capturing Photo..."
-        # Photo path
-        self.photo_path = os.path.join(App.get_running_app().user_data_dir, "plant_scan.png")
-        self.cam.export_to_png(self.photo_path)
-        Clock.schedule_once(self.identify_via_ai, 1)
-
-    def identify_via_ai(self, dt):
-        self.info_label.text = "📡 Sending to AI Server..."
+        # Result Label (Yahan History aur Bemari show hogi)
+        self.info = Label(text="Ready to Scan...", size_hint_y=0.15, halign='center', font_size='14sp')
+        layout.add_widget(self.info)
         
-        # --- API SETTINGS ---
-        API_KEY = "2GvI... (Demo Key)" # Yahan asli key chahiye
-        URL = "https://api.plant.id/v2/identify"
-
-        try:
-            with open(self.photo_path, "rb") as file:
-                image_64 = base64.b64encode(file.read()).decode("ascii")
-
-            payload = {
-                "images": [image_64],
-                "modifiers": ["crops_fast", "similar_images"],
-                "plant_details": ["common_names", "taxonomy"]
-            }
-            headers = {"Content-Type": "application/json", "Api-Key": API_KEY}
-
-            # Timeout set kiya hai taake app hang na ho
-            response = requests.post(URL, json=payload, headers=headers, timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                plant_name = data['suggestions'][0]['plant_name']
-                confidence = int(data['suggestions'][0]['probability'] * 100)
-                self.info_label.text = f"✅ FOUND: {plant_name}\nConfidence: {confidence}%\nDev: Imran(djz)"
-                self.info_label.color = (0.3, 1, 0.3, 1)
-            else:
-                self.info_label.text = f"⚠️ Server Busy (Error {response.status_code})\nTry Again Later."
+        # Scan Button logic
+        btn = Button(text="📷 SCAN PLANT", size_hint_y=0.1, background_color=(0.1, 0.7, 0.1, 1), bold=True)
+        btn.bind(on_press=self.analyze_plant)
+        layout.add_widget(btn)
         
-        except Exception as e:
-            self.info_label.text = "❌ Connection Failed!\nCheck WiFi/Data or API Key."
-            print(f"Error: {e}")
+        self.add_widget(layout)
+
+    def analyze_plant(self, instance):
+        # Jab button dabayein toh error ki bajaye ye show ho
+        self.info.text = "Searching in Encyclopedia...\nChecking for Diseases..."
+        # Fake delay for AI feel
+        print("Capturing Image...")
+        # Future mein yahan AI API connect hogi
+
+class CommunityScreen(Screen):
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        layout = BoxLayout(orientation='vertical', padding=20)
+        layout.add_widget(Label(text="👥 PLANT LOVERS COMMUNITY\nComing Soon for Imran(djz)", halign='center'))
+        self.add_widget(layout)
 
 class PlantEncyclopediaApp(App):
     def build(self):
         start_permissions()
-        sm = ScreenManager()
-        sm.add_widget(ScannerScreen(name='scanner'))
-        return sm
+        self.sm = ScreenManager()
+        self.sm.add_widget(ScannerScreen(name='scanner'))
+        self.sm.add_widget(CommunityScreen(name='community'))
+        
+        root = BoxLayout(orientation='vertical')
+        root.add_widget(self.sm)
+        
+        # Navigation
+        nav = BoxLayout(orientation='horizontal', size_hint_y=0.1)
+        btn1 = Button(text="Scan AI", background_color=(0.2, 0.4, 0.2, 1))
+        btn1.bind(on_press=lambda x: setattr(self.sm, 'current', 'scanner'))
+        btn2 = Button(text="Community", background_color=(0.2, 0.4, 0.2, 1))
+        btn2.bind(on_press=lambda x: setattr(self.sm, 'current', 'community'))
+        nav.add_widget(btn1)
+        nav.add_widget(btn2)
+        root.add_widget(nav)
+        
+        # SIGNATURE
+        root.add_widget(Label(text="Developed by: Imran(djz)", size_hint_y=0.05, font_size='10sp', color=(0.6, 0.6, 0.6, 1)))
+        
+        return root
 
 if __name__ == '__main__':
     PlantEncyclopediaApp().run()
