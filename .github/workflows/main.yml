@@ -1,4 +1,21 @@
-name: Build APK
+name: plant_doctor
+description: Plant identification app
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  camera: ^0.10.5+5
+  image_picker: ^1.0.7
+  http: ^1.1.0
+  provider: ^6.1.1
+
+flutter:
+  uses-material-design: truename: Build APK
 on: [push, workflow_dispatch]
 jobs:
   build:
