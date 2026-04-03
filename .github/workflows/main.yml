@@ -13,18 +13,31 @@ jobs:
         with:
           python-version: '3.10'
       
-      - name: Install System Dependencies
+      - name: Install Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y python3-pip build-essential git
+          pip install cython buildozer
       
-      - name: Install Cython and Buildozer
+      # ✅ Yeh step add kiya hai - Android SDK with licenses
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+        with:
+          cmdline-tools-version: 8512546
+      
+      - name: Accept Licenses
+        run: yes | sdkmanager --licenses
+      
+      - name: Install SDK Components
         run: |
-          pip install cython
-          pip install buildozer
+          sdkmanager "build-tools;33.0.0"
+          sdkmanager "platform-tools"
+          sdkmanager "platforms;android-33"
       
       - name: Build APK
         run: buildozer android debug
+        env:
+          BUILDOZER_WARN_ON_ROOT: 0
       
       - name: Upload APK
         uses: actions/upload-artifact@v4
