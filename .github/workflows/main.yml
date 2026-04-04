@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Android APK
 
 on:
   push:
@@ -7,14 +7,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04  # Stable version for Android builds
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
@@ -27,17 +27,25 @@ jobs:
             libavformat-dev libavcodec-dev zlib1g-dev libsqlite3-dev \
             sqlite3 bzip2 libbz2-dev libssl-dev openssl libffi-dev libgdbm-dev \
             libncursesw5-dev libncurses5-dev libncurses5 libtinfo5 \
-            pkg-config autoconf automake libtool m4 libtool-bin adwaita-icon-theme-full
+            pkg-config autoconf automake libtool m4 libtool-bin
 
       - name: Install Buildozer and Cython
         run: |
           pip install --upgrade pip
-          pip install buildozer cython==0.29.33
+          pip install buildozer cython==0.29.33 virtualenv
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Build with Buildozer
         run: yes | buildozer android debug
         env:
           ACCEPT_SDK_LICENSE: "True"
+          PLANTNET_API_KEY: ${{ secrets.PLANTNET_API_KEY }}
+          UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
