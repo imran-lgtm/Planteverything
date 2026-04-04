@@ -27,7 +27,8 @@ jobs:
             libavformat-dev libavcodec-dev zlib1g-dev libgstreamer1.0 \
             gstreamer1.0-plugins-base gstreamer1.0-plugins-good libsqlite3-dev \
             sqlite3 bzip2 libbz2-dev libssl-dev openssl libffi-dev libgdbm-dev \
-            libncursesw5-dev libncurses5-dev adwaita-icon-theme-full
+            libncursesw5-dev libncurses5-dev adwaita-icon-theme-full \
+            libncurses5 libtinfo5
 
       - name: Install Buildozer and Cython
         run: |
