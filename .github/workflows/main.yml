@@ -13,32 +13,29 @@ jobs:
         with:
           python-version: '3.10'
       
-      - name: Install System Dependencies
+      - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip build-essential git zip unzip
-          sudo apt-get install -y zlib1g-dev
-      
-      - name: Install Python Dependencies
-        run: |
+          sudo apt-get install -y python3-pip build-essential git
           pip install cython buildozer
+      
+      # ✅ Yeh step add karo - Buildozer ke SDK mein license accept karo
+      - name: Pre-setup Android SDK for Buildozer
+        run: |
+          mkdir -p ~/.buildozer/android/platform/android-sdk
+          export ANDROIDSDK=~/.buildozer/android/platform/android-sdk
+          # Buildozer ke SDK ko pre-accept karo
+          yes | buildozer android debug --dry-run || true
+        continue-on-error: true
       
       - name: Build APK
         timeout-minutes: 60
         run: |
-          buildozer android debug 2>&1 | tee build.log
-        continue-on-error: true
-      
-      - name: Check Build Status
-        run: |
-          if [ -f bin/*.apk ]; then
-            echo "✅ APK built successfully"
-            ls -lh bin/*.apk
-          else
-            echo "❌ Build failed, checking logs..."
-            tail -100 build.log
-            exit 1
-          fi
+          # Environment set karo
+          export ANDROIDSDK=~/.buildozer/android/platform/android-sdk
+          buildozer android debug
+        env:
+          BUILDOZER_WARN_ON_ROOT: 0
       
       - name: Upload APK
         uses: actions/upload-artifact@v4
