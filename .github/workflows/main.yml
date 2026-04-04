@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04  # Stable version for Android builds
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout code
@@ -41,7 +41,8 @@ jobs:
           java-version: '17'
 
       - name: Build with Buildozer
-        run: yes | buildozer android debug
+        run: |
+          buildozer -v android debug
         env:
           ACCEPT_SDK_LICENSE: "True"
           PLANTNET_API_KEY: ${{ secrets.PLANTNET_API_KEY }}
